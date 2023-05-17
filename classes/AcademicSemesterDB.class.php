@@ -17,11 +17,11 @@ class AcademicSemesterDB
         SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
         
         -- -----------------------------------------------------
-        -- Schema mydb2
+        -- Schema $databaseName
         -- -----------------------------------------------------
         
         -- -----------------------------------------------------
-        -- Schema mydb2
+        -- Schema $databaseName
         -- -----------------------------------------------------
         CREATE SCHEMA IF NOT EXISTS `$databaseName` DEFAULT CHARACTER SET utf8 ;
         USE `$databaseName` ;
@@ -58,8 +58,8 @@ class AcademicSemesterDB
           CONSTRAINT `fk_classes_departments`
             FOREIGN KEY (`departmentCode`)
             REFERENCES `$databaseName`.`departments` (`departmentCode`)
-            ON DELETE RESTRICT
-            ON UPDATE RESTRICT,
+            ON DELETE CASCADE
+            ON UPDATE CASCADE,
           CONSTRAINT `fk_classes_semesters1`
             FOREIGN KEY (`semester`)
             REFERENCES `$databaseName`.`semesters` (`semester`)
@@ -123,10 +123,10 @@ class AcademicSemesterDB
           `subjectCode` VARCHAR(10) NOT NULL,
           `classID` INT NOT NULL,
           `typeID` INT NOT NULL,
-          PRIMARY KEY (`classSubjectID`),
-          INDEX `fk_classesAndSubjects_subjects1_idx` (`subjectCode` ASC) VISIBLE,
+          PRIMARY KEY (`classSubjectID`, `subjectCode`, `classID`),
           INDEX `fk_classesAndSubjects_classes1_idx` (`classID` ASC) VISIBLE,
           INDEX `fk_classesAndSubjects_subjectTypes1_idx` (`typeID` ASC) VISIBLE,
+          INDEX `fk_classesAndSubjects_subjects1_idx` (`subjectCode` ASC) VISIBLE,
           CONSTRAINT `fk_classesAndSubjects_subjects1`
             FOREIGN KEY (`subjectCode`)
             REFERENCES `$databaseName`.`subjects` (`subjectCode`)
@@ -196,8 +196,8 @@ class AcademicSemesterDB
           `date` DATE NOT NULL,
           `day` INT NOT NULL,
           `classID` INT NOT NULL,
-          INDEX `fk_workingDays_classes1_idx` (`classID` ASC) VISIBLE,
           PRIMARY KEY (`date`, `classID`),
+          INDEX `fk_workingDays_classes1_idx` (`classID` ASC) VISIBLE,
           CONSTRAINT `fk_workingDays_classes1`
             FOREIGN KEY (`classID`)
             REFERENCES `$databaseName`.`classes` (`classID`)
@@ -231,7 +231,6 @@ class AcademicSemesterDB
           `date` DATE NOT NULL,
           `periodID` INT NOT NULL,
           `regNo` VARCHAR(25) NOT NULL,
-          INDEX `fk_absentees_workingDays1_idx` (`date` ASC) VISIBLE,
           INDEX `fk_absentees_timetable1_idx` (`periodID` ASC) VISIBLE,
           INDEX `fk_absentees_students1_idx` (`regNo` ASC) VISIBLE,
           PRIMARY KEY (`date`, `periodID`, `regNo`),
@@ -325,11 +324,12 @@ class AcademicSemesterDB
           `regNo` VARCHAR(25) NOT NULL,
           INDEX `fk_studentsAndSubjects_classesAndSubjects1_idx` (`classSubjectID` ASC) VISIBLE,
           INDEX `fk_studentsAndSubjects_students1_idx` (`regNo` ASC) VISIBLE,
+          PRIMARY KEY (`classSubjectID`, `regNo`),
           CONSTRAINT `fk_studentsAndSubjects_classesAndSubjects1`
             FOREIGN KEY (`classSubjectID`)
             REFERENCES `$databaseName`.`classesAndSubjects` (`classSubjectID`)
-            ON DELETE RESTRICT
-            ON UPDATE RESTRICT,
+            ON DELETE CASCADE
+            ON UPDATE CASCADE,
           CONSTRAINT `fk_studentsAndSubjects_students1`
             FOREIGN KEY (`regNo`)
             REFERENCES `$databaseName`.`students` (`regNo`)
@@ -346,6 +346,7 @@ class AcademicSemesterDB
           `classSubjectID` INT NOT NULL,
           INDEX `fk_facultiesAndSubjects_faculties1_idx` (`facultyID` ASC) VISIBLE,
           INDEX `fk_facultiesAndSubjects_classesAndSubjects1_idx` (`classSubjectID` ASC) VISIBLE,
+          PRIMARY KEY (`facultyID`, `classSubjectID`),
           CONSTRAINT `fk_facultiesAndSubjects_faculties1`
             FOREIGN KEY (`facultyID`)
             REFERENCES `$databaseName`.`faculties` (`facultyID`)
@@ -380,7 +381,6 @@ class AcademicSemesterDB
         CREATE TABLE IF NOT EXISTS `$databaseName`.`facultyCredentials` (
           `password` VARCHAR(100) NOT NULL,
           `facultyID` VARCHAR(25) NOT NULL,
-          INDEX `fk_staff_credentials_faculties1_idx` (`facultyID` ASC) VISIBLE,
           PRIMARY KEY (`facultyID`),
           CONSTRAINT `fk_staff_credentials_faculties1`
             FOREIGN KEY (`facultyID`)
@@ -414,7 +414,7 @@ class AcademicSemesterDB
         
         SET SQL_MODE=@OLD_SQL_MODE;
         SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
-        SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+        SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;        
         
         INSERT INTO odStatuses(statusID, status) VALUES('1','Pending'),
         ('2', 'Approved'),
